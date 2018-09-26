@@ -16,17 +16,18 @@ import static java.lang.Math.random;
 // sera apresentado na tela pela superficie de desenho
 class Renderizador implements GLSurfaceView.Renderer, View.OnTouchListener {
 
-    GL10 gl;
-    Triangulo tri;
-    Quadrado qua;
-    Paralelogramo para;
-    float esquerda = 0;
-    float direita = 0;
-    float posX = 0;
-    float posY = 0;
+    private GL10 gl;
+    private Triangulo tri;
+    private Quadrado qua;
+    private Paralelogramo para;
+    private float esquerda = 0;
+    private float direita = 0;
+    private int posX = 0;
+    private int posY = 0;
     private static int larguraX;
     private static int alturaY;
-    ArrayList<Geometria> vetorGeo = new ArrayList();
+    private Geometria objMove = null;
+    private ArrayList<Geometria> vetorGeo = new ArrayList();
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -69,21 +70,44 @@ class Renderizador implements GLSurfaceView.Renderer, View.OnTouchListener {
         for (int i = 0; i < vetorGeo.size(); i++) {
 //            vetorGeo.get(i).setPos(posX,posY);
             vetorGeo.get(i).registraBuffer();
-            if ((int) Math.random() % 2 == 1) {
-                vetorGeo.get(i).setAnguloRotacao(direita);
-                vetorGeo.get(i).desenha();
-            } else {
-                vetorGeo.get(i).setAnguloRotacao(esquerda);
-                vetorGeo.get(i).desenha();
-            }
+//            vetorGeo.get(i).setAnguloRotacao(esquerda);
+            vetorGeo.get(i).desenha();
         }
 
+        //getObjeto(posX, posY).setPos(posX, posY);
         qua.setAnguloRotacao(direita);
         qua.setPos(posX, posY);
-        qua.desenha();
+//        qua.desenha();
         direita += 5;
         esquerda -= 5;
 
+        if (objMove != null) {
+            objMove.setPos(posX, posY);
+        }
+
+    }
+
+    public Geometria getObjeto(int posX, int posY) {
+        int pontoBase = 0;
+
+
+        for (int i = 0; i < vetorGeo.size(); i++) {
+            if (posX > vetorGeo.get(i).getPosX() - 100 / 2 && posY > vetorGeo.get(i).getPosY() - 100 / 2) {
+                return vetorGeo.get(i);
+            }
+
+
+//            if (pontoBase == 50) {
+//                pontoBase = 0;
+//            }
+//            while (pontoBase < 50) {
+//                pontoBase += 1;
+//                if (posX + pontoBase == vetorGeo.get(i).getPosX()) {
+//                    return vetorGeo.get(i);
+//                }
+//            }
+        }
+        return null;
     }
 
     @Override
@@ -91,13 +115,23 @@ class Renderizador implements GLSurfaceView.Renderer, View.OnTouchListener {
         if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
             posX = (int) motionEvent.getX();
             posY = alturaY - (int) motionEvent.getY();
-        } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+        }
+        if (objMove == null) {
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                posX = (int) motionEvent.getX();
+                posY = alturaY - (int) motionEvent.getY();
+                Quadrado qua = new Quadrado(gl);
+                qua.setPos(posX, posY);
+                qua.setCor((float) random(), (float) random(), (float) random(), 1);
+                vetorGeo.add(qua);
+            }
+        }
+        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
             posX = (int) motionEvent.getX();
             posY = alturaY - (int) motionEvent.getY();
-            Quadrado qua = new Quadrado(gl);
-            qua.setPos(posX, posY);
-            qua.setCor((float) random(), (float) random(), (float) random(), 1);
-            vetorGeo.add(qua);
+
+            objMove = new Quadrado(gl);
+            objMove = this.getObjeto((int) posX, posY);
         }
         return true;
     }
